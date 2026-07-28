@@ -35,72 +35,119 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    navToggle.addEventListener('click', toggleMenu);
+    if (navToggle) {
+        navToggle.addEventListener('click', toggleMenu);
+    }
 
     // Close menu when a link is clicked
     navLinks.forEach(link => {
         link.addEventListener('click', () => {
-            if (navMenu.classList.contains('open')) {
+            if (navMenu && navMenu.classList.contains('open')) {
                 toggleMenu();
             }
         });
     });
 
     // ==========================================================================
-    // Smooth Scroll Navigation with Sticky Offset
+    // Smart Smooth Scroll Navigation (Page to Page & Local)
     // ==========================================================================
-    const allLinks = document.querySelectorAll('a[href^="#"]');
-    
-    allLinks.forEach(anchor => {
-        anchor.addEventListener('click', function(e) {
-            const targetId = this.getAttribute('href');
-            if (targetId === '#') return;
-            
-            const targetElement = document.querySelector(targetId);
-            
-            if (targetElement) {
-                e.preventDefault();
-                const navbarHeight = navbar.offsetHeight;
-                const targetPosition = targetElement.getBoundingClientRect().top + window.pageYOffset;
-                const offsetPosition = targetPosition - navbarHeight - 10; // Extra padding
-                
-                window.scrollTo({
-                    top: offsetPosition,
-                    behavior: 'smooth'
-                });
-            }
+    const getPageName = (path) => {
+        const parts = path.split('/');
+        return parts[parts.length - 1] || 'index.html';
+    };
+
+    const currentPath = window.location.pathname;
+    const currentPage = getPageName(currentPath);
+
+    const scrollToElement = (targetElement) => {
+        const navbarHeight = navbar ? navbar.offsetHeight : 80;
+        const targetPosition = targetElement.getBoundingClientRect().top + window.pageYOffset;
+        const offsetPosition = targetPosition - navbarHeight - 15; // Extra padding
+        
+        window.scrollTo({
+            top: offsetPosition,
+            behavior: 'smooth'
         });
+    };
+
+    // Intercept clicks on links that are local hashes
+    const allLinks = document.querySelectorAll('a');
+    allLinks.forEach(link => {
+        const href = link.getAttribute('href');
+        if (!href) return;
+        
+        // Check if the link contains a hash
+        if (href.includes('#')) {
+            const [linkPagePath, hash] = href.split('#');
+            const linkPage = getPageName(linkPagePath);
+            
+            // Check if linkPage matches currentPage (or both are home references)
+            const isCurrentPageHome = currentPage === 'index.html' || currentPage === '' || currentPage === 'Sirij-Astro';
+            const isLinkPageHome = linkPage === 'index.html' || linkPage === '';
+            
+            const isSamePage = (linkPage === currentPage) || (isCurrentPageHome && isLinkPageHome);
+            
+            if (isSamePage) {
+                const targetElement = document.querySelector(`#${hash}`);
+                if (targetElement) {
+                    link.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        scrollToElement(targetElement);
+                        
+                        // Update active state in nav menu
+                        navLinks.forEach(nl => nl.classList.remove('active'));
+                        if (link.classList.contains('nav-link')) {
+                            link.classList.add('active');
+                        }
+                    });
+                }
+            }
+        }
     });
 
+    // Handle hash on page load (e.g., navigating to services.html#havan from home)
+    if (window.location.hash) {
+        setTimeout(() => {
+            const hash = window.location.hash.substring(1);
+            const targetElement = document.querySelector(`#${hash}`);
+            if (targetElement) {
+                scrollToElement(targetElement);
+            }
+        }, 300); // Short delay to let fonts/images layout load
+    }
+
     // ==========================================================================
-    // Intersection Observer for Active Navigation Highlight
+    // Intersection Observer for Active Navigation Highlight (Only on Home Page)
     // ==========================================================================
     const sections = document.querySelectorAll('section[id]');
     
-    const observerOptions = {
-        root: null,
-        rootMargin: '-20% 0px -60% 0px', // Trigger when section occupies the mid-upper region
-        threshold: 0
-    };
+    if (sections.length > 0 && (currentPage === 'index.html' || currentPage === '' || currentPage === 'Sirij-Astro')) {
+        const observerOptions = {
+            root: null,
+            rootMargin: '-20% 0px -60% 0px',
+            threshold: 0
+        };
 
-    const observerCallback = (entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                const sectionId = entry.target.getAttribute('id');
-                
-                navLinks.forEach(link => {
-                    if (link.getAttribute('href') === `#${sectionId}`) {
-                        link.classList.add('active');
-                    } else {
-                        link.classList.remove('active');
-                    }
-                });
-            }
-        });
-    };
+        const observerCallback = (entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const sectionId = entry.target.getAttribute('id');
+                    
+                    navLinks.forEach(link => {
+                        const href = link.getAttribute('href');
+                        if (href && href.includes(`#${sectionId}`)) {
+                            link.classList.add('active');
+                        } else {
+                            link.classList.remove('active');
+                        }
+                    });
+                }
+            });
+        };
 
-    const observer = new IntersectionObserver(observerCallback, observerOptions);
-    sections.forEach(section => observer.observe(section));
+        const observer = new IntersectionObserver(observerCallback, observerOptions);
+        sections.forEach(section => observer.observe(section));
+    }
 
     // ==========================================================================
     // Fade-in Reveal Animations on Scroll
@@ -119,7 +166,7 @@ document.addEventListener('DOMContentLoaded', () => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
                 entry.target.classList.add('revealed');
-                observer.unobserve(entry.target); // Trigger only once
+                observer.unobserve(entry.target);
             }
         });
     };
@@ -131,7 +178,6 @@ document.addEventListener('DOMContentLoaded', () => {
         el.style.transform = 'translateY(30px)';
         el.style.transition = 'opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), transform 0.8s cubic-bezier(0.4, 0, 0.2, 1)';
         
-        // Add helper class in css/js
         revealObserver.observe(el);
     });
 
