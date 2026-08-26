@@ -153,7 +153,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Fade-in Reveal Animations on Scroll
     // ==========================================================================
     const revealElements = document.querySelectorAll(
-        '.service-preview-card, .service-detail-card, .testimonial-card, .about-grid, .hero-content, .hero-visual'
+        '.service-preview-card, .service-detail-card, .testimonials-slider-container, .about-grid, .hero-content, .hero-visual'
     );
     
     const revealOptions = {

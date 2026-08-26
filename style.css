@@ -817,13 +817,30 @@ img {
     background-color: var(--cream);
 }
 
-.testimonials-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 32px;
+.testimonials-slider-container {
+    overflow: hidden;
+    width: 100%;
+    position: relative;
+    padding: 20px 0;
+    /* Soft fade on edges */
+    mask-image: linear-gradient(to right, transparent, white 15%, white 85%, transparent);
+    -webkit-mask-image: linear-gradient(to right, transparent, white 15%, white 85%, transparent);
+}
+
+.testimonials-track {
+    display: flex;
+    gap: 30px;
+    animation: marquee 35s linear infinite;
+    width: max-content;
+}
+
+.testimonials-track:hover {
+    animation-play-state: paused;
 }
 
 .testimonial-card {
+    flex: 0 0 350px;
+    width: 350px;
     background-color: var(--white);
     border-radius: var(--border-radius-md);
     padding: 40px;
@@ -868,6 +885,24 @@ img {
 .author-location {
     font-size: 0.8rem;
     color: var(--text-muted);
+}
+
+/* Testimonial Marquee Keyframe Animations */
+@keyframes marquee {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(calc(-380px * 5)); } /* 350px card width + 30px gap */
+}
+
+@media (max-width: 480px) {
+    .testimonial-card {
+        flex: 0 0 280px;
+        width: 280px;
+        padding: 30px 20px;
+    }
+    @keyframes marquee {
+        0% { transform: translateX(0); }
+        100% { transform: translateX(calc(-310px * 5)); } /* 280px card width + 30px gap */
+    }
 }
 
 /* ==========================================================================
